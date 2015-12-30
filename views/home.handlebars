@@ -1,1 +1,17 @@
 <h1>Home</h1>
+
+<h1>
+  Accounts
+</h1>
+
+{{#each accounts}}
+    <div>
+        <p>
+            <a href="/accounts/{{id}}">{{name}}</a>
+        </p>
+        <p>
+            {{person}}
+        </p>
+    </div>
+{{/each}}
+

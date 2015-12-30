@@ -1,0 +1,51 @@
+<h1>{{account.name}}</h1>
+
+<div>
+    <div>
+        Account Value: {{accountValue}}
+    </div>
+    <div>
+        Account Spend: {{accountSpend}}
+    </div>
+    <div>
+        Account Gain: {{accountGain}}
+    </div>
+    <div>
+        Account Change: {{accountChange}}
+    </div>
+</div>
+
+<div>
+    {{#mutualFunds}}
+        <div>
+            {{symbol}}
+        </div>
+        <div>
+            {{category}}
+        </div>
+        <div>
+            Number of Shares: {{shares}}
+        </div>
+        <div>
+            Total Spend: {{totalSpend}}
+        </div>
+        <div>
+            Current Price: {{currentPrice}}
+        </div>
+        <div>
+            Current Value: {{currentValue}}
+        </div>
+        <div>
+            Gain: {{gain}}
+        </div>
+        <div>
+            Change: {{change}}
+        </div>
+    {{/mutualFunds}}
+
+    {{#each mutualFundValues}}
+    <div>
+        {{this.currentPrice}}
+    </div>
+    {{/each}}
+</div>
