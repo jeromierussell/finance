@@ -1,51 +1,106 @@
+<style>
+th, td {
+    text-align: right;
+}
+</style>
 <h1>{{account.name}}</h1>
 
 <div>
-    <div>
-        Account Value: {{accountValue}}
-    </div>
-    <div>
-        Account Spend: {{accountSpend}}
-    </div>
-    <div>
-        Account Gain: {{accountGain}}
-    </div>
-    <div>
-        Account Change: {{accountChange}}
-    </div>
+    <table>
+        <tbody>
+            <tr>
+                <td>
+                    Account Value: 
+                </td>
+                <td style='text-align:right'>
+                    &nbsp;$ {{accountValue}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Account Spend: 
+                </td>
+                <td style='text-align:right'>
+                    &nbsp;$ {{accountSpend}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Account Gain: 
+                </td>
+                <td style='text-align:right'>
+                    &nbsp;$ {{accountGain}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Account Change: 
+                </td>
+                <td style='text-align:right'>
+                    {{accountChange}} %
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 
-<div>
-    {{#mutualFunds}}
-        <div>
-            {{symbol}}
-        </div>
-        <div>
-            {{category}}
-        </div>
-        <div>
-            Number of Shares: {{shares}}
-        </div>
-        <div>
-            Total Spend: {{totalSpend}}
-        </div>
-        <div>
-            Current Price: {{currentPrice}}
-        </div>
-        <div>
-            Current Value: {{currentValue}}
-        </div>
-        <div>
-            Gain: {{gain}}
-        </div>
-        <div>
-            Change: {{change}}
-        </div>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>
+                Symbol
+            </th>
+            <th>
+                Category
+            </th>
+            <th>
+                # of Shares
+            </th>
+            <th>
+                Total Spend
+            </th>
+            <th>
+                Current Price
+            </th>
+            <th>
+                Current Value
+            </th>
+            <th>
+                Gain
+            </th>
+            <th>
+                Change
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#mutualFunds}}
+        <tr>
+            <td>
+                {{symbol}}
+            </td>
+            <td>
+               {{category}}
+            </td>
+            <td>
+                {{shares}}
+            </td>
+            <td>
+                $ {{totalSpend}}
+            </td>
+            <td>
+                $ {{currentPrice}}
+            </td>
+            <td>
+                $ {{currentValue}}
+            </td>
+            <td>
+                $ {{gain}}
+            </td>
+            <td>
+                {{change}} %
+            </td>
+        </tr>
     {{/mutualFunds}}
-
-    {{#each mutualFundValues}}
-    <div>
-        {{this.currentPrice}}
-    </div>
-    {{/each}}
-</div>
+    </tbody>
+</table>

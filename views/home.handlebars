@@ -1,4 +1,43 @@
-<h1>Home</h1>
+<h1>Overview</h1>
+
+<div>
+    <table>
+    	<tbody>
+    		<tr>
+    			<td>
+    				Total Value: 
+    			</td>
+    			<td style='text-align:right'>
+			        &nbsp;$ {{allValue}}
+    			</td>
+    		</tr>
+    		<tr>
+    			<td>
+    				Total Spend: 
+    			</td>
+    			<td style='text-align:right'>
+			        &nbsp;$ {{allSpend}}
+    			</td>
+    		</tr>
+    		<tr>
+    			<td>
+    				Total Gain: 
+    			</td>
+    			<td style='text-align:right'>
+			        &nbsp;$ {{allGain}}
+    			</td>
+    		</tr>
+    		<tr>
+    			<td>
+    				Total Change: 
+    			</td>
+    			<td style='text-align:right'>
+			        {{allChange}} %
+    			</td>
+    		</tr>
+    	</tbody>
+    </table>
+</div>
 
 <h1>
   Accounts
@@ -8,9 +47,6 @@
     <div>
         <p>
             <a href="/accounts/{{id}}">{{name}}</a>
-        </p>
-        <p>
-            {{person}}
         </p>
     </div>
 {{/each}}

@@ -7,7 +7,8 @@ var mutualFundSchema = mongoose.Schema({
     currentPrice: Number,
     accountId: {type: mongoose.Schema.ObjectId, required: true},
     totalSpend: Number,
-    initialPurchaseDate: Date
+    initialPurchaseDate: Date,
+    lastUpdated: Date
 });
 
 var MutualFund = mongoose.model('MutualFund', mutualFundSchema);

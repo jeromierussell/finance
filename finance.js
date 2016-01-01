@@ -1,6 +1,18 @@
-var express = require('express');
+Number.prototype.formatMoney = function(c, d, t){
+var n = this, 
+    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+    d = d == undefined ? "." : d, 
+    t = t == undefined ? "," : t, 
+    s = n < 0 ? "-" : "", 
+    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+    j = (j = i.length) > 3 ? j % 3 : 0;
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+ };
 
+
+var express = require('express');
 var app = express();
+
 var Promise = require('bluebird');
 
 var handlebars = require('express-handlebars')
@@ -22,7 +34,6 @@ var opts = {
 };
 
 console.log(app.get('env'));
-console.log(config.mongo.development.connectionString);
 
 switch(app.get('env')) {
     case 'development':
@@ -46,119 +57,124 @@ var client = rest.wrap(mime);
 var Account = require('./models/account.js');
 var MutualFund = require('./models/mutualFund.js');
 
+var baseMutualFundPath = 'http://www.google.com/finance/info?q='
+
+
 app.get('/', function(req, res) {
-    Account.find().exec(function(err, accounts) {
-        res.render('home', {accounts: accounts});
+
+    var allPromises = [];
+
+    var accountsPromise = Account.find().exec(function(err, accounts) {
+
+        return accounts;
     });
+
+    var allMutualFundsPromise = MutualFund.find().exec(function(err, mutualFunds) {
+        if(err) throw err;
+
+        mutualFunds.forEach(function (mutualFund) {
+            mutualFund.currentValue = mutualFund.currentPrice * mutualFund.shares;
+            mutualFund.gain = mutualFund.currentValue - mutualFund.totalSpend;
+            mutualFund.change = mutualFund.gain / mutualFund.totalSpend;
+
+            return mutualFund;
+        });
+
+        return mutualFunds;
+    });
+
+    Promise.join(accountsPromise, allMutualFundsPromise, function(accounts, mutualFunds) {
+        var allSpend = 0;
+        var allGain = 0;
+        var allValue = 0;
+
+        mutualFunds.forEach(function(fund) {
+            allSpend = allSpend + fund.totalSpend;
+            allGain = allGain + fund.gain;
+            allValue = allValue + fund.currentValue;
+        });
+
+        res.render('home', {
+            accounts: accounts,
+            allGain: allGain.formatMoney(2),
+            allSpend: allSpend.formatMoney(2),
+            allValue: allValue.formatMoney(2),
+            allChange: (100 * allGain / allSpend).toFixed(2)
+        });
+    }); 
 });
 
 app.get('/accounts/:id', function(req, res) {
-    var account = null;
-    var mutualFunds = null;
-    var mutualFundValues = {};
-
-    var baseMutualFundPath = 'http://www.google.com/finance/info?q='
-
     Account.findById(req.params.id).exec(function(err, result) {
         if(err) throw err;
     }).then(function (account) {
-        var fundPromises = [];
-
         MutualFund.find({accountId: req.params.id}).exec(function(err, result) {
             if(err) throw err;
 
-            // console.log("MUTUAL FUNDS");
             mutualFunds = result;
-            // console.log(mutualFunds);
+
+            var accountSpend = 0;
+            var accountGain = 0;
+            var accountValue = 0;
 
             mutualFunds.forEach(function (mutualFund) {
-                // console.log('hi');
-                // console.log('mutual fund i.symbol', mutualFund.symbol);
+                mutualFund.currentValue = mutualFund.currentPrice * mutualFund.shares;
+                mutualFund.gain = mutualFund.currentValue - mutualFund.totalSpend;
+                mutualFund.change = (100 * mutualFund.gain / mutualFund.totalSpend).toFixed(2);
 
-                var fundPromise = client({ path: baseMutualFundPath + mutualFund.symbol}).then(function(response) {
-                    var dude = response.entity.split("//")
-                    var dudered = JSON.parse(dude[1]);
+                accountSpend = accountSpend + mutualFund.totalSpend;
+                accountGain = accountGain + mutualFund.gain;
+                accountValue = accountValue + mutualFund.currentValue;
 
-console.log('RETURNING #1')
-console.log(dudered[0].l);
+                mutualFund.currentValue = mutualFund.currentValue.formatMoney(2);
+                mutualFund.gain = mutualFund.gain.formatMoney(2);
 
-                    return dudered[0].l;
-                }).then(function(theValue) {
-                    // console.log('theValue', theValue);
-                    // console.log('shares', mutualFund.shares);
-
-                    mutualFund.currentPrice = theValue;
-                    mutualFund.currentValue = theValue * mutualFund.shares;
-                    mutualFund.gain = mutualFund.currentValue - mutualFund.totalSpend;
-                    mutualFund.change = mutualFund.gain / mutualFund.totalSpend;
-
-console.log('RETURNING #2')
-console.log(mutualFund);
-
-                    return mutualFund;
-                });
-
-                fundPromises.push(fundPromise);
+                return mutualFund;
             });
 
-            Promise.all(fundPromises).then(function(mutualFunds) {
-                console.log('results...');
-                console.log(mutualFunds);
-
-                var accountSpend = 0;
-                var accountGain = 0;
-                var accountValue = 0;
-
-                mutualFunds.forEach(function(fund) {
-                    accountSpend = accountSpend + fund.totalSpend;
-                    accountGain = accountGain + fund.gain;
-                    accountValue = accountValue + fund.currentValue;
-                });
-
-                res.render('account', {
-                    account: account,
-                    mutualFunds: mutualFunds,
-                    accountGain: accountGain,
-                    accountSpend: accountSpend,
-                    accountValue: accountValue,
-                    accountChange: accountGain / accountSpend
-                });
-
-/*                res.render('account', {
-                    account: account
-                });
-            */
-            })
-
-// console.log('RETURNING #3')
-// console.log(fundPromises);
-
-            return fundPromises;
+            res.render('account', {
+                account: account,
+                mutualFunds: mutualFunds,
+                accountGain: accountGain.formatMoney(2),
+                accountSpend: accountSpend.formatMoney(2),
+                accountValue: accountValue.formatMoney(2),
+                accountChange: (100 * accountGain / accountSpend).toFixed(2)
+            });
         });
-
-// console.log('RETURNING #4')
-// console.log(fundPromises);
-
-        return fundPromises;
     });
-/*
-        mutualFunds.forEach(function(fund) {
-            accountSpend = accountSpend + fund.totalSpend;
-            accountGain = accountGain + fund.gain;
-            accountValue = accountValue + fund.currentValue;
+});
+
+app.get('/update', function(req, res) {
+    MutualFund.find({}).exec(function(err, result) {
+        if(err) throw err;
+
+        console.log("Updating current prices...");
+
+        result.forEach(function (mutualFund) {
+            console.log(mutualFund.symbol);
+
+            client({path: baseMutualFundPath + mutualFund.symbol}).then(function(response) {
+                var dude = response.entity.split("//")
+                var dudered = JSON.parse(dude[1]);
+
+                mutualFund.currentPrice = dudered[0].l;
+                mutualFund.lastUpdated = new Date();
+
+                mutualFund.save(function (err) {
+                    if (err) {
+                        console.log('Error updating [' + mutualFund.symbol + ']');
+                        console.log(err);                        
+                    } else {
+                        console.log(mutualFund.symbol + ' saved!');
+                    }
+                })
+
+                return dudered[0].l;
+            });
         });
 
-
-        res.render('account', {
-            account: account,
-            mutualFunds: mutualFunds,
-            accountGain: accountGain,
-            accountSpend: accountSpend,
-            accountValue: accountValue,
-            accountChange: accountGain / accountSpend
-        });
-*/        
-
+        res.send('done...cool');
+    });
 });
 
 app.use(function(req, res, next) {
