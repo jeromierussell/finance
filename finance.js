@@ -46,7 +46,7 @@ switch(app.get('env')) {
         throw new Error('Unknown environment: ' + app.get('env'));
 }
 
-require('./seed.js');
+// require('./seed.js');
 
 var rest = require('rest');
 var mime = require('rest/interceptor/mime');
